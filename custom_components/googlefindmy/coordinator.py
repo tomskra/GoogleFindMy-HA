@@ -2025,7 +2025,10 @@ class GoogleFindMyCoordinator(DataUpdateCoordinator[List[Dict[str, Any]]]):
         self.async_set_updated_data(self.data)
 
         try:
-            location_data = await self.api.async_get_device_location(device_id, name)
+            # high_traffic=True: manual locate should enable high-frequency BLE advertising
+            # so nearby phones can get a fresh fix quickly. Background polls use False (default)
+            # to avoid triggering audible chirps on certain tracker firmware every poll cycle.
+            location_data = await self.api.async_get_device_location(device_id, name, high_traffic=True)
             if not location_data:
                 return {}
 

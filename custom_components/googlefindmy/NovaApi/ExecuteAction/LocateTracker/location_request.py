@@ -65,7 +65,13 @@ def unregister_fcm_receiver_provider() -> None:
     _FCM_ReceiverGetter = None
 
 
-def create_location_request(canonic_device_id: str, fcm_registration_id: str, request_uuid: str) -> str:
+def create_location_request(
+    canonic_device_id: str,
+    fcm_registration_id: str,
+    request_uuid: str,
+    *,
+    high_traffic: bool = False,
+) -> str:
     """Build and serialize a LocateTracker action request.
 
     DeviceUpdate_pb2 is imported lazily here to avoid protobuf side effects
@@ -75,6 +81,11 @@ def create_location_request(canonic_device_id: str, fcm_registration_id: str, re
         canonic_device_id: The canonical ID of the target device.
         fcm_registration_id: The FCM token for push notifications.
         request_uuid: A unique identifier for this request.
+        high_traffic: When True, sets lastHighTrafficEnablingTime to the current
+            timestamp, which instructs the tracker to advertise at high frequency
+            (~0.5 s BLE interval). This is desirable for an on-demand manual locate
+            but should be omitted for background polling to avoid causing some
+            tracker firmware to emit audible chirps on every poll cycle.
 
     Returns:
         A hex-encoded string representing the serialized protobuf message.
@@ -85,8 +96,13 @@ def create_location_request(canonic_device_id: str, fcm_registration_id: str, re
         canonic_device_id, fcm_registration_id, request_uuid=request_uuid
     )
 
-    # Use a current timestamp; server treats this as an arbitrary marker.
-    action_request.action.locateTracker.lastHighTrafficEnablingTime.seconds = int(time.time())
+    # Only enable high-traffic BLE advertising mode when explicitly requested
+    # (i.e. manual "Locate now" button). Background polls omit this field so that
+    # nearby Android phones do not connect to the tracker at 0.5 s intervals,
+    # which can trigger audible chirps on certain tracker firmware.
+    if high_traffic:
+        action_request.action.locateTracker.lastHighTrafficEnablingTime.seconds = int(time.time())
+
     action_request.action.locateTracker.contributorType = (
         DeviceUpdate_pb2.SpotContributorType.FMDN_ALL_LOCATIONS
     )
@@ -242,6 +258,7 @@ async def get_location_data_for_device(
     *,
     username: Optional[str] = None,
     cache: Optional[any] = None,
+    high_traffic: bool = False,
 ) -> list:
     """Get location data for a device (async, HA-compatible).
 
@@ -260,6 +277,8 @@ async def get_location_data_for_device(
         name: The human-readable name of the device for logging purposes.
         session: (Deprecated) An optional aiohttp.ClientSession. No longer used directly.
         username: The username for the request.
+        high_traffic: When True, enables high-frequency BLE advertising on the tracker.
+            Should only be set for user-initiated (manual) locates, not background polls.
 
     Returns:
         A list of dictionaries containing location data, or an empty list on failure.
@@ -317,7 +336,7 @@ async def get_location_data_for_device(
             return []
 
         # Create location request payload
-        hex_payload = create_location_request(canonic_device_id, fcm_token, request_uuid)
+        hex_payload = create_location_request(canonic_device_id, fcm_token, request_uuid, high_traffic=high_traffic)
 
         # Send location request to Google API (async; HA session preferred if provided)
         _LOGGER.info("Sending location request to Google API for %s...", name)

@@ -521,7 +521,7 @@ class GoogleFindMyAPI:
 
     # --------------------------------- Location ----------------------------------
     async def async_get_device_location(
-        self, device_id: str, device_name: str
+        self, device_id: str, device_name: str, *, high_traffic: bool = False
     ) -> Dict[str, Any]:
         """Async, HA-compatible location request for a single device.
 
@@ -531,6 +531,8 @@ class GoogleFindMyAPI:
         Args:
             device_id: The canonical ID of the device.
             device_name: The human-readable name of the device for logging.
+            high_traffic: When True, enables high-frequency BLE advertising on the tracker.
+                Should only be set for user-initiated (manual) locates, not background polls.
 
         Returns:
             A dictionary containing the best available location data for the device.
@@ -553,7 +555,8 @@ class GoogleFindMyAPI:
             )
             # Explicitly pass cache to prevent cross-account contamination
             records = await get_location_data_for_device(
-                device_id, device_name, session=self._session, username=username, cache=self._cache
+                device_id, device_name, session=self._session, username=username, cache=self._cache,
+                high_traffic=high_traffic,
             )
             best = self._select_best_location(records)
             if best:
