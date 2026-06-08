@@ -1143,7 +1143,7 @@ class GoogleFindMyAPI:
 
     # --------------------------------- Location ----------------------------------
     async def async_get_device_location(
-        self, device_id: str, device_name: str
+        self, device_id: str, device_name: str, *, high_traffic: bool = False
     ) -> dict[str, Any]:
         """Async, HA-compatible location request for a single device.
 
@@ -1158,6 +1158,10 @@ class GoogleFindMyAPI:
         Args:
             device_id: The canonical ID of the device.
             device_name: The human-readable name of the device for logging.
+            high_traffic: When True, sets lastHighTrafficEnablingTime to the current
+                timestamp so the tracker advertises at high frequency (~0.5 s BLE
+                interval). Only pass True for user-initiated (manual) locates; background
+                polls should leave this False to avoid audible chirps on some firmware.
 
         Returns:
             A dictionary containing the best available location data for the device.
@@ -1176,6 +1180,11 @@ class GoogleFindMyAPI:
                 device_name,
                 device_id,
             )
+            # Manual locates request high-frequency BLE advertising; background polls do not,
+            # to avoid audible chirps on some tracker firmware.
+            effective_last_mode_switch = (
+                int(time.time()) if high_traffic else self._contributor_mode_switch_epoch
+            )
             # Prefer new signature with entry namespace; fall back gracefully.
             try:
                 records = await get_location_data_for_device(
@@ -1185,7 +1194,7 @@ class GoogleFindMyAPI:
                     namespace=self._namespace(),
                     cache=cast("TokenCache | None", self._cache),
                     contributor_mode=self._contributor_mode,
-                    last_mode_switch=self._contributor_mode_switch_epoch,
+                    last_mode_switch=effective_last_mode_switch,
                 )
             except TypeError:
                 try:
@@ -1195,7 +1204,7 @@ class GoogleFindMyAPI:
                         session=self._session,
                         cache=cast("TokenCache | None", self._cache),
                         contributor_mode=self._contributor_mode,
-                        last_mode_switch=self._contributor_mode_switch_epoch,
+                        last_mode_switch=effective_last_mode_switch,
                     )
                 except TypeError:
                     try:

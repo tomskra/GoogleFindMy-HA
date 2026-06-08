@@ -24,7 +24,7 @@ from typing import Any
 from aiohttp import ClientConnectionError, ClientError
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
-from ..const import DEFAULT_MIN_POLL_INTERVAL
+from ..const import DEFAULT_MIN_POLL_INTERVAL, DEFAULT_HIGH_TRAFFIC_LOCATE, OPT_HIGH_TRAFFIC_LOCATE
 from ..NovaApi.nova_request import (
     NovaAuthError,
     NovaHTTPError,
@@ -308,8 +308,14 @@ class LocateOperations(_MixinBase):
             google_home_filter = self._get_google_home_filter()
 
             try:
+                entry = self.config_entry
+                high_traffic = bool(
+                    entry.options.get(OPT_HIGH_TRAFFIC_LOCATE, DEFAULT_HIGH_TRAFFIC_LOCATE)
+                    if entry is not None
+                    else DEFAULT_HIGH_TRAFFIC_LOCATE
+                )
                 location_data = await self.api.async_get_device_location(
-                    device_id, name
+                    device_id, name, high_traffic=high_traffic
                 )
 
                 # Success path: clear any auth error state

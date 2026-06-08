@@ -111,6 +111,7 @@ OPT_IGNORED_DEVICES: str = "ignored_devices"
 OPT_DELETE_CACHES_ON_REMOVE: str = "delete_caches_on_remove"
 OPT_STALE_THRESHOLD: str = "stale_threshold"
 OPT_SHOW_LOCATION_AGE: str = "show_location_age"
+OPT_HIGH_TRAFFIC_LOCATE: str = "high_traffic_locate"
 # Legacy option key - kept for reading old configurations, no longer used
 OPT_STALE_THRESHOLD_ENABLED: str = "stale_threshold_enabled"
 
@@ -130,6 +131,7 @@ OPTION_KEYS: tuple[str, ...] = (
     OPT_CONTRIBUTOR_MODE,
     OPT_STALE_THRESHOLD,
     OPT_SHOW_LOCATION_AGE,
+    OPT_HIGH_TRAFFIC_LOCATE,
 )
 
 # Keys which may exist historically in entry.data and should be soft-copied to entry.options
@@ -213,6 +215,7 @@ DEFAULT_DELETE_CACHES_ON_REMOVE: bool = True
 # Minimum: 300 seconds (5 minutes) - allows ~2-3 typical update cycles
 DEFAULT_STALE_THRESHOLD: int = 1800
 DEFAULT_SHOW_LOCATION_AGE: bool = True
+DEFAULT_HIGH_TRAFFIC_LOCATE: bool = True
 
 CONTRIBUTOR_MODE_HIGH_TRAFFIC: str = "high_traffic"
 CONTRIBUTOR_MODE_IN_ALL_AREAS: str = "in_all_areas"
@@ -239,6 +242,7 @@ DEFAULT_OPTIONS: dict[str, object] = {
     OPT_CONTRIBUTOR_MODE: DEFAULT_CONTRIBUTOR_MODE,
     OPT_STALE_THRESHOLD: DEFAULT_STALE_THRESHOLD,
     OPT_SHOW_LOCATION_AGE: DEFAULT_SHOW_LOCATION_AGE,
+    OPT_HIGH_TRAFFIC_LOCATE: DEFAULT_HIGH_TRAFFIC_LOCATE,
 }
 
 # -------------------- Options schema versioning (lightweight) --------------------
