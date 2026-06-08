@@ -195,6 +195,56 @@ async def test_new_entry_ignores_legacy_alias_when_receivers_present() -> None:
 
 
 @pytest.mark.asyncio
+async def test_acquire_reregisters_providers_when_flag_drifted() -> None:
+    """Re-acquire should restore provider callbacks when the flag drifted false."""
+
+    hass = SimpleNamespace(data={DOMAIN: {}})
+    entry = make_config_entry(entry_id="entry-provider")
+    cache = _DummyCache(entry.entry_id, {"fcm": {"registration": {"token": "t"}}})
+
+    receiver = await _async_acquire_shared_fcm(
+        hass,
+        entry=entry,
+        cache=cache,
+        entry_resolver=lambda: entry.entry_id,
+    )
+
+    bucket = hass.data[DOMAIN]
+    bucket["providers_registered"] = False
+
+    api_module = importlib.import_module("custom_components.googlefindmy.api")
+    loc_module = importlib.import_module(
+        "custom_components.googlefindmy.NovaApi.ExecuteAction.LocateTracker.location_request"
+    )
+
+    cast(Callable[[], None], getattr(api_module, "unregister_fcm_receiver_provider"))()
+    cast(Callable[[], None], getattr(loc_module, "unregister_fcm_receiver_provider"))()
+
+    assert getattr(api_module, "_FCM_ReceiverGetter") is None
+    assert (
+        isinstance(getattr(loc_module, "_fcm_receiver_state", None), dict)
+        and getattr(loc_module, "_fcm_receiver_state").get("getter") is None
+    )
+
+    reacquired = await _async_acquire_shared_fcm(
+        hass,
+        entry=entry,
+        cache=cache,
+        entry_resolver=lambda: entry.entry_id,
+    )
+
+    assert reacquired is receiver
+    assert callable(getattr(api_module, "_FCM_ReceiverGetter", None))
+    assert (
+        isinstance(getattr(loc_module, "_fcm_receiver_state", None), dict)
+        and callable(getattr(loc_module, "_fcm_receiver_state").get("getter"))
+    )
+    assert bucket.get("providers_registered") is True
+
+    await _async_release(receiver, hass, entry)
+
+
+@pytest.mark.asyncio
 async def test_legacy_fcm_receiver_alias_preserved() -> None:
     hass = SimpleNamespace(data={DOMAIN: {}})
 

@@ -5448,7 +5448,9 @@ async def _async_acquire_shared_fcm(
                 resolvers = bucket.setdefault("fcm_provider_resolvers", {})
                 resolvers[entry_id] = entry_resolver
 
-            # Register provider for both consumer modules (exactly once on first acquire)
+        # Register provider for both consumer modules (exactly once on first acquire).
+        # If the registration flag drifted while a receiver still exists, re-register.
+        if not providers_registered:
             # Re-registering ensures downstream modules resolve the refreshed instance.
             def provider(entry_id: str | None = None) -> FcmReceiverHAType:
                 """Return the shared FCM receiver for integration consumers."""
@@ -5456,31 +5458,28 @@ async def _async_acquire_shared_fcm(
                 return _domain_fcm_provider(hass, entry_id)
 
             provider_fn: Callable[[str | None], FcmReceiverHAType] = provider
-            if not providers_registered:
-                global loc_register_fcm_provider, loc_unregister_fcm_provider
-                if loc_register_fcm_provider is None:
-                    from .NovaApi.ExecuteAction.LocateTracker.location_request import (
-                        register_fcm_receiver_provider as _loc_register_fcm_provider,
-                    )
-
-                    loc_register_fcm_provider = _loc_register_fcm_provider
-                if loc_unregister_fcm_provider is None:
-                    from .NovaApi.ExecuteAction.LocateTracker.location_request import (
-                        unregister_fcm_receiver_provider as _loc_unregister_fcm_provider,
-                    )
-
-                    loc_unregister_fcm_provider = _loc_unregister_fcm_provider
-
-                if loc_register_fcm_provider is not None:
-                    loc_register_fcm_provider(
-                        cast(
-                            Callable[[str | None], NovaFcmReceiverProtocol], provider_fn
-                        )
-                    )
-                api_register_fcm_provider(
-                    cast(Callable[[str | None], ApiFcmReceiverProtocol], provider_fn)
+            global loc_register_fcm_provider, loc_unregister_fcm_provider
+            if loc_register_fcm_provider is None:
+                from .NovaApi.ExecuteAction.LocateTracker.location_request import (
+                    register_fcm_receiver_provider as _loc_register_fcm_provider,
                 )
-                bucket["providers_registered"] = True
+
+                loc_register_fcm_provider = _loc_register_fcm_provider
+            if loc_unregister_fcm_provider is None:
+                from .NovaApi.ExecuteAction.LocateTracker.location_request import (
+                    unregister_fcm_receiver_provider as _loc_unregister_fcm_provider,
+                )
+
+                loc_unregister_fcm_provider = _loc_unregister_fcm_provider
+
+            if loc_register_fcm_provider is not None:
+                loc_register_fcm_provider(
+                    cast(Callable[[str | None], NovaFcmReceiverProtocol], provider_fn)
+                )
+            api_register_fcm_provider(
+                cast(Callable[[str | None], ApiFcmReceiverProtocol], provider_fn)
+            )
+            bucket["providers_registered"] = True
 
         new_refcount = refcount + 1
         _set_fcm_refcount(bucket, entry_id or "default", new_refcount)
