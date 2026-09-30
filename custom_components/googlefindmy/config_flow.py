@@ -90,6 +90,7 @@ from .const import (
     DEFAULT_DELETE_CACHES_ON_REMOVE,
     DEFAULT_DEVICE_POLL_DELAY,
     DEFAULT_ENABLE_STATS_ENTITIES,
+    DEFAULT_HIGH_TRAFFIC_LOCATE,
     # Defaults
     DEFAULT_LOCATION_POLL_INTERVAL,
     DEFAULT_MAP_VIEW_TOKEN_EXPIRATION,
@@ -105,6 +106,7 @@ from .const import (
     OPT_DELETE_CACHES_ON_REMOVE,
     OPT_DEVICE_POLL_DELAY,
     OPT_ENABLE_STATS_ENTITIES,
+    OPT_HIGH_TRAFFIC_LOCATE,
     OPT_IGNORED_DEVICES,
     # Options (non-secret runtime settings)
     OPT_LOCATION_POLL_INTERVAL,
@@ -5447,6 +5449,9 @@ class OptionsFlowHandler(OptionsFlowBase, _OptionsFlowMixin):  # type: ignore[mi
             OPT_SHOW_LOCATION_AGE: _get(
                 OPT_SHOW_LOCATION_AGE, DEFAULT_SHOW_LOCATION_AGE
             ),
+            OPT_HIGH_TRAFFIC_LOCATE: _get(
+                OPT_HIGH_TRAFFIC_LOCATE, DEFAULT_HIGH_TRAFFIC_LOCATE
+            ),
             OPT_SPEED_GATE_ENABLED: _get(
                 OPT_SPEED_GATE_ENABLED, DEFAULT_SPEED_GATE_ENABLED
             ),
@@ -5576,6 +5581,7 @@ class OptionsFlowHandler(OptionsFlowBase, _OptionsFlowMixin):  # type: ignore[mi
             vol.All(vol.Coerce(int), vol.Range(min=300, max=86400)),
         )
         _register(vol.Optional(OPT_SHOW_LOCATION_AGE), bool)
+        _register(vol.Optional(OPT_HIGH_TRAFFIC_LOCATE), bool)
         _register(vol.Optional(OPT_SPEED_GATE_ENABLED), bool)
         _register(vol.Optional(OPT_ROUNDTRIP_CONFIRM), bool)
 

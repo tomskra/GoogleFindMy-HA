@@ -257,6 +257,7 @@
           "delete_caches_on_remove": "Supprimer les caches lors de la suppression de l’entrée",
           "map_view_token_expiration": "Activer l’expiration du jeton de la vue carte",
           "contributor_mode": "Mode de contribution de localisation",
+          "high_traffic_locate": "Enable high-traffic BLE for manual locate",
           "subentry": "Groupe de fonctionnalités"
         },
         "data_description": {
@@ -267,6 +268,7 @@
           "delete_caches_on_remove": "Supprime les jetons mis en cache et les métadonnées des appareils lors de la suppression de cette entrée.",
           "map_view_token_expiration": "Lorsqu'elle est activée, les jetons de la vue carte expirent après 1 semaine. Lorsqu'elle est désactivée (par défaut), ils n'expirent pas.",
           "contributor_mode": "Choisissez comment votre appareil contribue au réseau Google (par défaut Toutes les zones pour une contribution participative ou uniquement les zones à forte affluence).",
+          "high_traffic_locate": "When enabled (default), manual 'Locate now' requests instruct the tracker to advertise at high frequency (~0.5 s BLE interval) for a faster fix. Disable to suppress this if the tracker emits audible chirps during manual locates.",
           "subentry": "Enregistrez ces options pour le groupe de fonctionnalités sélectionné. Consultez [Sous-entrées et groupes de fonctionnalités]({subentries_docs_url}) pour des exemples."
         }
       },

@@ -257,6 +257,7 @@
           "delete_caches_on_remove": "Exclua caches ao remover entrada",
           "map_view_token_expiration": "Ativar a expiração do token de visualização do mapa",
           "contributor_mode": "Modo de contribuidor de localização",
+          "high_traffic_locate": "Enable high-traffic BLE for manual locate",
           "subentry": "Grupo de recursos"
         },
         "data_description": {
@@ -267,6 +268,7 @@
           "delete_caches_on_remove": "Remova os tokens armazenados em cache e os metadados do dispositivo quando esta entrada for excluída.",
           "map_view_token_expiration": "Quando ativado, os tokens de visualização do mapa expiram após 1 semana. ",
           "contributor_mode": "Escolha como seu dispositivo contribui para a rede do Google (todas as áreas por padrão para relatórios de crowdsourcing ou apenas áreas de alto tráfego).",
+          "high_traffic_locate": "When enabled (default), manual 'Locate now' requests instruct the tracker to advertise at high frequency (~0.5 s BLE interval) for a faster fix. Disable to suppress this if the tracker emits audible chirps during manual locates.",
           "subentry": "Armazene essas opções no grupo de recursos selecionado. Consulte [Subentradas e grupos de recursos]({subentries_docs_url}) para exemplos."
         }
       },

@@ -121,6 +121,7 @@ OPT_IGNORED_DEVICES: str = "ignored_devices"
 OPT_DELETE_CACHES_ON_REMOVE: str = "delete_caches_on_remove"
 OPT_STALE_THRESHOLD: str = "stale_threshold"
 OPT_SHOW_LOCATION_AGE: str = "show_location_age"
+OPT_HIGH_TRAFFIC_LOCATE: str = "high_traffic_locate"
 OPT_SPEED_GATE_ENABLED: str = "speed_gate_enabled"
 OPT_ROUNDTRIP_CONFIRM: str = "roundtrip_confirm_enabled"
 # Legacy option key - kept for reading old configurations, no longer used
@@ -142,6 +143,7 @@ OPTION_KEYS: tuple[str, ...] = (
     OPT_CONTRIBUTOR_MODE,
     OPT_STALE_THRESHOLD,
     OPT_SHOW_LOCATION_AGE,
+    OPT_HIGH_TRAFFIC_LOCATE,
     OPT_SPEED_GATE_ENABLED,
     OPT_ROUNDTRIP_CONFIRM,
 )
@@ -261,6 +263,7 @@ DEFAULT_DELETE_CACHES_ON_REMOVE: bool = True
 # Minimum: 300 seconds (5 minutes) - allows ~2-3 active-scan update cycles
 DEFAULT_STALE_THRESHOLD: int = 3900
 DEFAULT_SHOW_LOCATION_AGE: bool = True
+DEFAULT_HIGH_TRAFFIC_LOCATE: bool = True
 
 DEFAULT_SPEED_GATE_ENABLED: bool = True
 # Kinematic plausibility cap (m/s). ~1440 km/h: above the record jetstream
@@ -312,6 +315,7 @@ DEFAULT_OPTIONS: dict[str, object] = {
     OPT_CONTRIBUTOR_MODE: DEFAULT_CONTRIBUTOR_MODE,
     OPT_STALE_THRESHOLD: DEFAULT_STALE_THRESHOLD,
     OPT_SHOW_LOCATION_AGE: DEFAULT_SHOW_LOCATION_AGE,
+    OPT_HIGH_TRAFFIC_LOCATE: DEFAULT_HIGH_TRAFFIC_LOCATE,
     OPT_SPEED_GATE_ENABLED: DEFAULT_SPEED_GATE_ENABLED,
     OPT_ROUNDTRIP_CONFIRM: DEFAULT_ROUNDTRIP_CONFIRM,
 }
@@ -746,6 +750,7 @@ __all__ = [
     "OPT_DELETE_CACHES_ON_REMOVE",
     "OPT_STALE_THRESHOLD",
     "OPT_SHOW_LOCATION_AGE",
+    "OPT_HIGH_TRAFFIC_LOCATE",
     "OPT_SPEED_GATE_ENABLED",
     "OPT_ROUNDTRIP_CONFIRM",
     "OPT_STALE_THRESHOLD_ENABLED",
@@ -769,6 +774,7 @@ __all__ = [
     "DEFAULT_DELETE_CACHES_ON_REMOVE",
     "DEFAULT_STALE_THRESHOLD",
     "DEFAULT_SHOW_LOCATION_AGE",
+    "DEFAULT_HIGH_TRAFFIC_LOCATE",
     "DEFAULT_OPTIONS",
     "CONFIG_FIELDS",
     "TOKEN_REFRESH_COOLDOWN_S",

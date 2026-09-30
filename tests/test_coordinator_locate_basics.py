@@ -19,7 +19,10 @@ from unittest.mock import MagicMock
 import pytest
 from homeassistant.exceptions import HomeAssistantError
 
-from custom_components.googlefindmy.const import DEFAULT_MIN_POLL_INTERVAL
+from custom_components.googlefindmy.const import (
+    DEFAULT_MIN_POLL_INTERVAL,
+    OPT_HIGH_TRAFFIC_LOCATE,
+)
 from custom_components.googlefindmy.NovaApi.ExecuteAction.LocateTracker.decrypt_locations import (
     DecryptionError,
     OwnerKeyLookupTransientError,
@@ -427,3 +430,47 @@ class TestAsyncStopSoundGating:
 
 
 _ = DEFAULT_MIN_POLL_INTERVAL  # silence unused-import lint when production no-ops
+
+
+class TestAsyncLocateDeviceHighTraffic:
+    """``async_locate_device`` forwards the high-traffic BLE option to the API.
+
+    The option decides whether a user-initiated locate asks the tracker to
+    advertise at a high BLE frequency for a faster fix. It defaults to enabled;
+    disabling it suppresses the audible chirps some tracker firmware emits.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _pass_cooldown(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Move the clock past every cooldown gate so the API call is reached."""
+        monkeypatch.setattr(
+            "custom_components.googlefindmy.coordinator.locate.time.monotonic",
+            lambda: 1000.0,
+        )
+
+    @staticmethod
+    def _coord(options: dict | None) -> LocateStub:
+        """Return a stub bound to an entry carrying ``options``."""
+        entry = make_config_entry(entry_id="high-traffic-entry", options=options)
+        return LocateStub(config_entry=entry)
+
+    @pytest.mark.parametrize(
+        ("options", "expected"),
+        [
+            (None, True),
+            ({OPT_HIGH_TRAFFIC_LOCATE: True}, True),
+            ({OPT_HIGH_TRAFFIC_LOCATE: False}, False),
+        ],
+        ids=["default-enabled", "explicitly-enabled", "explicitly-disabled"],
+    )
+    async def test_option_is_forwarded_to_api(
+        self, options: dict | None, expected: bool
+    ) -> None:
+        """The stored option reaches ``async_get_device_location`` verbatim."""
+        coord = self._coord(options)
+        coord.api.async_get_device_location.return_value = None
+
+        await coord.async_locate_device("dev-1")
+
+        kwargs = coord.api.async_get_device_location.call_args.kwargs
+        assert kwargs["high_traffic"] is expected

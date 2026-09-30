@@ -1369,3 +1369,58 @@ class TestAsyncStopSoundErrorMapping:
         api = self._api_with_token(monkeypatch)
         self._patch_submit(monkeypatch, None, raises=exc)
         assert run_coro(api.async_stop_sound("d")) is False
+
+
+class TestAsyncGetDeviceLocationHighTraffic:
+    """``high_traffic`` selects the ``last_mode_switch`` stamp sent to Nova.
+
+    ``True`` stamps the current time, which tells the tracker to advertise at a
+    high BLE frequency for a manual locate. ``False`` (the background-poll
+    default) reuses the contributor-mode switch epoch, so routine polls do not
+    put the tracker into high-traffic mode every cycle.
+    """
+
+    SWITCH_EPOCH = 1_600_000_000
+    NOW = 1_700_000_000
+
+    @staticmethod
+    def _capture_kwargs(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
+        """Patch the Nova helper and return the dict its kwargs land in."""
+        seen: dict[str, Any] = {}
+
+        async def _fake(*_args: Any, **kwargs: Any) -> list[Any]:
+            seen.update(kwargs)
+            return []
+
+        monkeypatch.setattr(api_module, "get_location_data_for_device", _fake)
+        return seen
+
+    def _api(self) -> GoogleFindMyAPI:
+        """Return an API bound to a known contributor-mode switch epoch."""
+        return GoogleFindMyAPI(
+            cache=StubCache(entry_id="entry-1"),
+            session=None,
+            contributor_mode_switch_epoch=self.SWITCH_EPOCH,
+        )
+
+    def test_high_traffic_stamps_current_time(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A manual locate stamps "now" so the tracker advertises fast."""
+        seen = self._capture_kwargs(monkeypatch)
+        monkeypatch.setattr(api_module.time, "time", lambda: float(self.NOW))
+
+        run_coro(self._api().async_get_device_location("d", "name", high_traffic=True))
+
+        assert seen["last_mode_switch"] == self.NOW
+
+    def test_background_poll_reuses_switch_epoch(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The default (background poll) keeps the contributor-mode epoch."""
+        seen = self._capture_kwargs(monkeypatch)
+        monkeypatch.setattr(api_module.time, "time", lambda: float(self.NOW))
+
+        run_coro(self._api().async_get_device_location("d", "name"))
+
+        assert seen["last_mode_switch"] == self.SWITCH_EPOCH

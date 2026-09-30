@@ -220,6 +220,7 @@ Accessible via the ⚙️ cogwheel button on the main Google Find My Device Inte
 | `contributor_mode` | in_all_areas | selection | Chooses whether Google shares aggregated network-only data (`high_traffic`) or participates in full crowdsourced reporting (`in_all_areas`). |
 | `stale_threshold` | 3900 | seconds | After this many seconds (default: 65 minutes) without a location update, the tracker state becomes `unknown`. Use the "Last Location" entity to always see the last known position. |
 | `show_location_age` | true | toggle | Adds a `location_age` attribute (in seconds, rounded to 60s) to each tracker entity. Excluded from Recorder history to keep DB size predictable. |
+| `high_traffic_locate` | true | toggle | When enabled, a manual "Locate now" asks the tracker to advertise at a high BLE frequency (~0.5s interval) for a faster fix. Disable if your tracker emits audible chirps during manual locates. Background polls are unaffected. |
 
 ### Google Home filter behavior
 
