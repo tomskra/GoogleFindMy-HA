@@ -185,9 +185,11 @@ def test_location_request_persists_mode_override(
         *,
         contributor_mode: str,
         last_mode_switch: int,
+        high_traffic: bool = False,
     ) -> str:
         captured["mode"] = contributor_mode
         captured["switch"] = last_mode_switch
+        captured["high_traffic"] = high_traffic
         return "payload"
 
     monkeypatch.setattr(

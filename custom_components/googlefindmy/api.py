@@ -1240,10 +1240,14 @@ class GoogleFindMyAPI:
                 device_name,
                 device_id,
             )
-            # Manual locates request high-frequency BLE advertising; background polls do not,
-            # to avoid audible chirps on some tracker firmware.
+            # Manual locates request high-frequency BLE advertising; background polls
+            # do not. ``high_traffic`` is forwarded separately because it decides
+            # whether the stamp is sent at all - ``last_mode_switch`` keeps carrying
+            # the contributor-mode switch epoch for the poll path.
             effective_last_mode_switch = (
-                int(time.time()) if high_traffic else self._contributor_mode_switch_epoch
+                int(time.time())
+                if high_traffic
+                else self._contributor_mode_switch_epoch
             )
             # Prefer new signature with entry namespace; fall back gracefully.
             try:
@@ -1255,6 +1259,7 @@ class GoogleFindMyAPI:
                     cache=cast("TokenCache | None", self._cache),
                     contributor_mode=self._contributor_mode,
                     last_mode_switch=effective_last_mode_switch,
+                    high_traffic=high_traffic,
                 )
             except TypeError:
                 try:

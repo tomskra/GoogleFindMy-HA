@@ -166,13 +166,14 @@ def unregister_fcm_receiver_provider() -> None:
     _fcm_receiver_state["getter"] = None
 
 
-def create_location_request(
+def create_location_request(  # noqa: PLR0913 - mirrors get_location_data_for_device
     canonic_device_id: str,
     fcm_registration_id: str,
     request_uuid: str,
     *,
     contributor_mode: str = DEFAULT_CONTRIBUTOR_MODE,
     last_mode_switch: int | None = None,
+    high_traffic: bool = False,
 ) -> str:
     """Build and serialize a LocateTracker action request.
 
@@ -185,6 +186,9 @@ def create_location_request(
         request_uuid: A unique identifier for this request.
         contributor_mode: Contributor preference ("high_traffic" or "in_all_areas").
         last_mode_switch: Epoch timestamp when the contributor mode last changed.
+        high_traffic: When True, stamp ``lastHighTrafficEnablingTime`` so the tracker
+            advertises at a high BLE frequency. Only user-initiated locates set this;
+            background polls leave the field unset (see the note below).
 
     Returns:
         A hex-encoded string representing the serialized protobuf message.
@@ -193,18 +197,21 @@ def create_location_request(
 
     normalized_mode = _normalize_contributor_mode(contributor_mode)
     if last_mode_switch is None or last_mode_switch <= 0:
-        # Use 0 to request all available historical reports.  The previous
-        # default of ``int(time.time())`` effectively told the server we just
-        # subscribed, causing it to drop reports between polling intervals.
         last_mode_switch = 0
 
     action_request = create_action_request(
         canonic_device_id, fcm_registration_id, request_uuid=request_uuid
     )
 
-    action_request.action.locateTracker.lastHighTrafficEnablingTime.seconds = int(
-        last_mode_switch
-    )
+    # Only stamp the field when high-traffic advertising is actually requested.
+    # ``lastHighTrafficEnablingTime`` is a proto3 *message* field, so assigning
+    # ``seconds = 0`` still marks it present on the wire (``12 00``) and reads as
+    # "high traffic was just enabled" - which makes some tracker firmware emit an
+    # audible chirp on every request. Leaving it unset omits the field entirely.
+    if high_traffic:
+        action_request.action.locateTracker.lastHighTrafficEnablingTime.seconds = int(
+            last_mode_switch
+        )
 
     proto_mode_map = {
         CONTRIBUTOR_MODE_HIGH_TRAFFIC: device_update_pb2.SpotContributorType.FMDN_HIGH_TRAFFIC,
@@ -517,6 +524,7 @@ async def get_location_data_for_device(  # noqa: PLR0911, PLR0912, PLR0913, PLR0
     cache: TokenCache | None = None,
     contributor_mode: str | None = None,
     last_mode_switch: int | None = None,
+    high_traffic: bool = False,
 ) -> list[dict[str, Any]]:
     """Get location data for a device (async, HA-compatible).
 
@@ -745,6 +753,7 @@ async def get_location_data_for_device(  # noqa: PLR0911, PLR0912, PLR0913, PLR0
             request_uuid,
             contributor_mode=mode,
             last_mode_switch=resolved_last_mode_switch,
+            high_traffic=high_traffic,
         )
 
         # Send location request to Google API (async; HA session preferred if provided)

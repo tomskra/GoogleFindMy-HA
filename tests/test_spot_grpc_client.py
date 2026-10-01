@@ -328,7 +328,7 @@ class _AuthErrorAPI:
     """API stub raising SpotAuthPermanentError for manual locate tests."""
 
     async def async_get_device_location(
-        self, _dev_id: str, _dev_name: str
+        self, _dev_id: str, _dev_name: str, *, high_traffic: bool = False
     ) -> dict[str, Any]:
         raise SpotAuthPermanentError("session expired")
 

@@ -1413,14 +1413,21 @@ class TestAsyncGetDeviceLocationHighTraffic:
         run_coro(self._api().async_get_device_location("d", "name", high_traffic=True))
 
         assert seen["last_mode_switch"] == self.NOW
+        assert seen["high_traffic"] is True
 
-    def test_background_poll_reuses_switch_epoch(
+    def test_background_poll_forwards_epoch_without_high_traffic(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """The default (background poll) keeps the contributor-mode epoch."""
+        """A background poll keeps the epoch but never requests high traffic.
+
+        ``last_mode_switch`` still carries the contributor-mode switch epoch
+        (upstream contract); ``high_traffic=False`` is what keeps the proto field
+        off the wire.
+        """
         seen = self._capture_kwargs(monkeypatch)
         monkeypatch.setattr(api_module.time, "time", lambda: float(self.NOW))
 
         run_coro(self._api().async_get_device_location("d", "name"))
 
         assert seen["last_mode_switch"] == self.SWITCH_EPOCH
+        assert seen["high_traffic"] is False

@@ -321,11 +321,11 @@ class LocateOperations(_MixinBase):
             google_home_filter = self._get_google_home_filter()
 
             try:
-                entry = self.config_entry
+                # ``options`` is absent on some lightweight entry stubs, so read it
+                # defensively rather than assuming the full ConfigEntry surface.
+                options = getattr(self.config_entry, "options", None) or {}
                 high_traffic = bool(
-                    entry.options.get(OPT_HIGH_TRAFFIC_LOCATE, DEFAULT_HIGH_TRAFFIC_LOCATE)
-                    if entry is not None
-                    else DEFAULT_HIGH_TRAFFIC_LOCATE
+                    options.get(OPT_HIGH_TRAFFIC_LOCATE, DEFAULT_HIGH_TRAFFIC_LOCATE)
                 )
                 location_data = await self.api.async_get_device_location(
                     device_id, name, high_traffic=high_traffic
